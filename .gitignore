@@ -1,0 +1,4 @@
+**/*.exe
+**/*.db
+.env
+setenv.ps1
