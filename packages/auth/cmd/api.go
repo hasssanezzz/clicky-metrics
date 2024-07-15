@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 )
@@ -17,10 +16,12 @@ func NewAPIServer(addr string) *APIServer {
 }
 
 func (s *APIServer) Run() error {
+	InitValidator()
 	router := http.NewServeMux()
 
 	router.HandleFunc("GET /", defaultHandler)
-	router.HandleFunc("GET /login", loginHandler)
+	router.HandleFunc("GET /v1/login", loginHandler)
+	router.HandleFunc("GET /v1/register", registerHandler)
 
 	server := http.Server{
 		Addr:    s.addr,
@@ -35,18 +36,4 @@ func LoggerMiddleware(next http.Handler) http.HandlerFunc {
 		log.Printf("[LOG] %s %s", r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
 	}
-}
-
-func WriteJson(w http.ResponseWriter, value interface{}) error {
-	w.Header().Set("Content-Type", "application/json")
-	return json.NewEncoder(w).Encode(value)
-}
-
-func ReadJson(w http.ResponseWriter, r *http.Request, value *any) error {
-	if err := json.NewDecoder(r.Body).Decode(&value); err != nil {
-		http.Error(w, "Coundn't parse request body", http.StatusBadRequest)
-		return err
-	}
-
-	return nil
 }
