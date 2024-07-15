@@ -1,7 +1,7 @@
 from flask import jsonify
 from flask_restful import Resource
 
-from db import Url
+from .db import Url
 
 
 class UrlResource(Resource):

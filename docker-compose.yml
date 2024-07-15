@@ -1,6 +1,5 @@
 version: '3'
 
-
 services:
   auth-service:
     build: ./packages/auth
@@ -14,6 +13,21 @@ services:
       - ${AUTH_SERVICE_PORT}:80
     depends_on:
       - postgres-db
+
+  shortener-service:
+    build: ./packages/shortener
+    environment:
+      - POSTGRES_HOST=postgres-db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - ${SHORTENER_SERVICE_PORT}:80
+    depends_on:
+      - postgres-db
+      - auth-service
+
   postgres-db:
     image: postgres
     environment:
@@ -21,11 +35,6 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     ports:
-    - ${POSTGRES_PORT}:5432
+      - ${POSTGRES_PORT}:5432
     volumes:
       - ./packages/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-
-
-networks:
-  my-network:  # Define a network for service discovery
-    external: true  # Optional: Allow external connections to the network
