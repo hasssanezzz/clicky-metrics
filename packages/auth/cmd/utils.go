@@ -2,10 +2,16 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var key = []byte(os.Getenv("JWT_SECRET"))
 
 func WriteJson(w http.ResponseWriter, value interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -23,7 +29,6 @@ func ReadJson(w http.ResponseWriter, r *http.Request, value interface{}) error {
 
 func WriteApiError(w http.ResponseWriter, code int, errors map[string][]string) {
 	data := map[string]interface{}{
-		"status": "error",
 		"errors": errors,
 		"meta":   nil,
 	}
@@ -34,9 +39,8 @@ func WriteApiError(w http.ResponseWriter, code int, errors map[string][]string) 
 
 func WriteApiResponse(w http.ResponseWriter, res interface{}) {
 	data := map[string]interface{}{
-		"status": "error",
-		"data":   res,
-		"meta":   nil,
+		"data": res,
+		"meta": nil,
 	}
 
 	WriteJson(w, data)
@@ -48,4 +52,35 @@ func HashPassword(password string) ([]byte, error) {
 		return nil, err
 	}
 	return hashedPassword, nil
+}
+
+func CreateToken(username string) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["exp"] = time.Now().Add(10 * 24 * time.Hour).Unix()
+	claims["username"] = username
+
+	return token.SignedString(key)
+}
+
+func DecodeToken(tokenString string) (string, error) {
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return key, nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("can not extract data from token")
+	}
+
+	for key, value := range claims {
+		if key == "username" {
+			username, ok := value.(string)
+			if !ok {
+				break
+			}
+			return username, nil
+		}
+	}
+
+	return "", fmt.Errorf("can not extract data from token")
 }

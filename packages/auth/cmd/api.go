@@ -20,8 +20,9 @@ func (s *APIServer) Run() error {
 	router := http.NewServeMux()
 
 	router.HandleFunc("GET /", defaultHandler)
-	router.HandleFunc("GET /v1/login", loginHandler)
-	router.HandleFunc("GET /v1/register", registerHandler)
+	router.HandleFunc("GET /v1/validate", validateTokenHandler)
+	router.HandleFunc("POST /v1/login", loginHandler)
+	router.HandleFunc("POST /v1/register", registerHandler)
 
 	server := http.Server{
 		Addr:    s.addr,

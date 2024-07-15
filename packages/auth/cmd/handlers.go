@@ -13,6 +13,20 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "", http.StatusNotFound)
 }
 
+func validateTokenHandler(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+	username, err := DecodeToken(token)
+
+	if err != nil {
+		WriteApiError(w, http.StatusNotAcceptable, map[string][]string{
+			"root": {err.Error()},
+		})
+		return
+	}
+
+	WriteApiResponse(w, username)
+}
+
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 	type RegisterRequestBody struct {
 		Email    string `json:"email" validate:"required,email"`
@@ -34,7 +48,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, usernameErr := UserRepo.FindByUsername(body.Username)
-	_, emailErr := UserRepo.FindByUsername(body.Username)
+	_, emailErr := UserRepo.FindByEmail(body.Email)
 
 	if usernameErr == nil || emailErr == nil {
 		errors := make(map[string][]string)
@@ -46,7 +60,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 			errors["email"] = []string{"E-mail is in use."}
 		}
 
-		WriteApiError(w, http.StatusBadRequest, errors)
+		WriteApiError(w, http.StatusConflict, errors)
 		return
 	}
 
@@ -69,6 +83,15 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "error: %v", err)
 		return
 	}
+
+	token, err := CreateToken(body.Username)
+	if err != nil {
+		WriteApiError(w, http.StatusInternalServerError, map[string][]string{
+			"root": {"internal server error."},
+		})
+		return
+	}
+	w.Header().Set("Authorization", token)
 
 	WriteApiResponse(w, newUser)
 }
@@ -109,5 +132,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJson(w, "Hello world")
+	token, err := CreateToken(body.Username)
+	if err != nil {
+		WriteApiError(w, http.StatusInternalServerError, map[string][]string{
+			"root": {"internal server error."},
+		})
+		return
+	}
+	w.Header().Set("Authorization", token)
+
+	WriteApiResponse(w, user)
 }
