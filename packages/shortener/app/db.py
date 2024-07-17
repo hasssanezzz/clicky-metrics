@@ -35,7 +35,8 @@ class UrlRepo:
         try:
             query = Url.select(Url).where(Url.user_username == username)
             return [url.to_dict() for url in query]
-        except:
+        except Exception as e:
+            print(f'error trying to get URLs with username {username}: {e}')
             return None
     
     @staticmethod
@@ -43,16 +44,18 @@ class UrlRepo:
         try:
             url = Url.select(Url).where(Url.short == short).get()
             return url.to_dict()
-        except:
+        except Exception as e:
+            print(f'error trying to get url with short {short}: {e}')
             return None
     
     @staticmethod
     def create(username, long):
         try:
-            url = Url(username=username, short=generate_short(), long=long)
+            url = Url(user_username=username, short=generate_short(), long=long)
             url.save()
             return url
-        except:
+        except Exception as e:
+            print(f'error create to get url: {e}')
             return None
         
     @staticmethod

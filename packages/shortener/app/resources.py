@@ -14,8 +14,8 @@ class UrlResource(Resource):
             return api_error({'root': ['unauthorized']}), 401
         
         results = UrlRepo.getByUsername(username)
-        if results:
-            return results
+        if results is not None:
+            return api_response(results)
         return api_error({ 'root': ['internal server error']}), 500
     
     def post(self):
@@ -25,9 +25,10 @@ class UrlResource(Resource):
         
         username = AuthService.validate(request.headers.get(AUTH_TOKEN_NAME))
         newUrl = UrlRepo.create(username=username, long=result)
+        print('USERNAME:', username)
         if not newUrl:
             return api_error({ 'root': ['internal server error']}), 500
-        return newUrl.to_dict()
+        return api_response(newUrl.to_dict())
     
     
 class RedirectResource(Resource):
@@ -50,13 +51,15 @@ class RedirectResource(Resource):
         if not username:
             return api_error({'root': ['unauthorized']}), 401
         url = UrlRepo.getByShort(short)
-        if not url or url['user_username'] != username:
+        if not url:
+            return api_error({'short': ['short not found']}), 404
+        if url['user_username'] != username:
             return api_error({'root': ['unauthorized']}), 401
             
         try:
             UrlRepo.update(short, result)
         except Exception as e:
-            print(e)
+            print(f'error trying to update url with short {short}: {e}')
             return api_error({ 'root': ['internal server error']}), 500
         else:
             url['long'] = result
@@ -69,13 +72,15 @@ class RedirectResource(Resource):
         if not username:
             return api_error({'root': ['unauthorized']}), 401
         url = UrlRepo.getByShort(short)
-        if not url or url['user_username'] != username:
+        if not url:
+            return api_error({'short': ['short not found']}), 404
+        if url['user_username'] != username:
             return api_error({'root': ['unauthorized']}), 401
         
         try:
             UrlRepo.delete(short)
         except Exception as e:
-            print(e)
+            print(f'error trying to deleting url with short {short}: {e}')
             return api_error({ 'root': ['internal server error']}), 500
         else:
             return api_response(None)
