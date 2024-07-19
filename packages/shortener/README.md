@@ -19,7 +19,7 @@ This API provides functionality to shorten and manage long URLs, it depeneds on 
     ```
 1. Run the main application to start the API server.
     ```
-    go run .
+    flask run
     ```
 
 ### Authentication
