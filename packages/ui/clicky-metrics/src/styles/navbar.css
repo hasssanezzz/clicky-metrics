@@ -1,0 +1,47 @@
+.navbar,
+.buttons-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.navbar {
+  padding: 1rem 4rem;
+  border-bottom: 1px solid #e5e8eb;
+}
+.logo-text {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #0d141c;
+}
+.buttons-container {
+  list-style-type: none;
+  gap: 1rem;
+}
+.btn-login:link,
+.btn-login:visited,
+.btn-sign:link,
+.btn-sign:visited {
+  display: block;
+  text-decoration: none;
+  font-size: 1.7rem;
+  padding: 1rem 1.6rem;
+  font-weight: bold;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.btn-login:link,
+.btn-login:visited {
+  background-color: #e8edf2;
+  color: #0d141c;
+}
+.btn-sign:link,
+.btn-sign:visited {
+  background-color: #1a80e5;
+  color: #f7fafc;
+}
+
+.btn-login:active,
+.btn-sign:active {
+  scale: 0.95;
+}
