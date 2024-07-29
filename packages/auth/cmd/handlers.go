@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/hasssanezzz/multi-service-shortner/storage"
@@ -93,7 +94,10 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Authorization", token)
 
-	WriteApiResponse(w, newUser)
+	WriteApiResponse(w, map[string]interface{}{
+		"user":  newUser,
+		"token": token,
+	})
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -134,6 +138,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	token, err := CreateToken(body.Username)
 	if err != nil {
+		log.Printf("error creating a token: %v\n", err)
 		WriteApiError(w, http.StatusInternalServerError, map[string][]string{
 			"root": {"internal server error."},
 		})
@@ -141,5 +146,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Authorization", token)
 
-	WriteApiResponse(w, user)
+	WriteApiResponse(w, map[string]interface{}{
+		"user":  user,
+		"token": token,
+	})
 }

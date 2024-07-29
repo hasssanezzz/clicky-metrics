@@ -12,6 +12,7 @@ import (
 )
 
 var key = []byte(os.Getenv("JWT_SECRET"))
+var apiKey = []byte(os.Getenv("API_JWT_SECRET"))
 
 func WriteJson(w http.ResponseWriter, value interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -83,4 +84,24 @@ func DecodeToken(tokenString string) (string, error) {
 	}
 
 	return "", fmt.Errorf("can not extract data from token")
+}
+
+func DecodeGatewayToken(tokenString string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			println("from here: ", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return apiKey, nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error parsing token: %v", err)
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, fmt.Errorf("invalid token")
 }
