@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -26,7 +27,7 @@ func (s *APIServer) Run() error {
 
 	server := http.Server{
 		Addr:    s.addr,
-		Handler: LoggerMiddleware(router),
+		Handler: LoggerMiddleware(GatewayAuth(router)),
 	}
 
 	return server.ListenAndServe()
@@ -35,6 +36,21 @@ func (s *APIServer) Run() error {
 func LoggerMiddleware(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[LOG] %s %s", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r)
+	}
+}
+
+func GatewayAuth(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("API-Authorization")
+
+		_, err := DecodeGatewayToken(token)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	}
 }
